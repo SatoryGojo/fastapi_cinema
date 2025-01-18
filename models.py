@@ -1,19 +1,19 @@
-from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy import Column, String, Integer, create_engine
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy import create_engine
 
 
 engine = create_engine('sqlite:///training_db.db')
 
 class AbstractBase(DeclarativeBase):
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True) 
 
 
 class FilmModel(AbstractBase):
 
     __tablename__ = 'films'
 
-    name = Column(String)
+    name:  Mapped[str] = mapped_column(nullable=True)
 
 
 
