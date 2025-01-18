@@ -1,55 +1,47 @@
+from typing import Annotated
+
+from sqlalchemy import select
 from models import FilmModel, engine
-from sqlalchemy.orm import Session
-from fastapi import FastAPI
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+from fastapi import FastAPI, Depends
 import uvicorn
 from pydantic import BaseModel
 
 
 app = FastAPI()
 
-@app.get('/films')
-def all_films():
-    with Session(engine, autoflush=False) as db:
-
-        films = db.query(FilmModel).all()
-        
-        if films is not None:
-            return {"films": films}
-        
-        return {'films': 'пусто'}
-        
-    
-
-@app.get('/films/{film_id}')
-def detail_film(film_id: int):
-    with Session(engine, autoflush=False) as db:
-
-        film = db.get(FilmModel, film_id)
-
-        if film is not None:
-            return {'id': film.id, 'name': film.name}
-        
-        return {'detail': 'фильма нет'}
-        
-
-           
-
-
 class FilmScheme(BaseModel):
     name: str
 
 
+async_session = async_sessionmaker(engine, expire_on_commit=False)
+
+async def db_connect():
+    async with  async_session() as db:
+        yield db
+
+
+SessionDept = Annotated[AsyncSession, Depends(db_connect)]
+
 @app.post('/films/add_new')
-def add_new(new_film : FilmScheme):
-    with Session(engine, autoflush=False) as db:
-
-        db.add(FilmModel(
-            name = new_film.name 
-        ))
-        db.commit()
-
-        return {'name': new_film.name}
+async def add_new(film: FilmScheme, session: SessionDept):
     
+    session.add(FilmModel(
+        name = film.name  
+    ))
+
+    await session.commit()
+    return {"name": film.name}
+
+
+@app.get('/films')
+async def all_films(session: SessionDept):
+
+    query = select(FilmModel) 
+    films = await session.execute(query)
+
+    return {"films": films.scalars().all()}
+
 
         
 if __name__ == '__main__':
