@@ -20,5 +20,14 @@ class FilmModel(AbstractBase):
 
 
 
+# class UserModel(AbstractBase):
+
+#     __tablename__ = 'users'
+
+#     username: Mapped[str]
+#     password: Mapped[str]
+
+
+
 
 
