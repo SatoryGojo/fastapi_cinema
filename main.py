@@ -1,16 +1,11 @@
 from typing import Annotated
-import secrets
 from sqlalchemy import select
-from models import FilmModel, engine
-from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
-from fastapi import FastAPI, Depends, HTTPException, status
+from models import FilmModel, db_connect
+from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import FastAPI, Depends
 import uvicorn
 from pydantic import BaseModel
-from passlib.context import CryptContext
-from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
-from jose import jwt, JWTError
-from datetime import timedelta, datetime, timezone
-from users import user_router
+from users import router as user_router
 
 
 
@@ -21,12 +16,6 @@ app.include_router(user_router)
 class FilmScheme(BaseModel):
     name: str
 
-
-async_session = async_sessionmaker(engine, expire_on_commit=False)
-
-async def db_connect():
-    async with  async_session() as db:
-        yield db
 
 
 SessionDept = Annotated[AsyncSession, Depends(db_connect)]
